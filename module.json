@@ -1,0 +1,16 @@
+{
+  "id": "irop-weapon-mods",
+  "title": "Insurrection: Weapon Mods",
+  "description": "Drag and drop mod trays under each weapon and armor on Insurrection's Sandbox character sheets. A record of what is fitted, with no mechanical automation.",
+  "version": "1.0.0",
+  "authors": [{ "name": "RuneKingThor1" }],
+  "compatibility": { "minimum": "13", "verified": "13.351" },
+  "relationships": {
+    "systems": [{ "id": "sandbox", "type": "system", "compatibility": { "minimum": "0.16" } }]
+  },
+  "esmodules": ["scripts/weapon-mods.js"],
+  "styles": ["styles/weapon-mods.css"],
+  "url": "https://github.com/RuneKingThor1/irop-weapon-mods",
+  "manifest": "https://raw.githubusercontent.com/RuneKingThor1/irop-weapon-mods/main/module.json",
+  "download": "https://raw.githubusercontent.com/RuneKingThor1/irop-weapon-mods/main/irop-weapon-mods.zip"
+}

@@ -1,0 +1,116 @@
+/* ============================================================================
+   Insurrection: Weapon Mods, tray styling
+
+   Reads the Insurrection sheet skin's tokens (--irop-accent and friends) when
+   the skin is loaded, and falls back to the same values when it is not.
+   Selectors carry table.sbtable > tbody so they outrank the skin's row
+   striping and hover rules regardless of which stylesheet loads last.
+   ========================================================================= */
+
+.window-app.sandbox.sheet table.sbtable > tbody > tr.irop-mods-row,
+.window-app.sandbox.sheet table.sbtable > tbody > tr.irop-mods-row:nth-child(even),
+.window-app.sandbox.sheet table.sbtable > tbody > tr.irop-mods-row:hover{
+  background:transparent;
+  border-bottom:1px solid rgba(255,255,255,0.045);
+}
+
+/* The weapon and its tray read as one unit. */
+.window-app.sandbox.sheet table.sbtable > tbody > tr.irop-has-tray{ border-bottom:0; }
+
+.window-app.sandbox.sheet table.sbtable > tbody > tr.irop-mods-row > td{
+  padding:0 6px 5px calc(var(--irop-row-inset, 6px) + var(--irop-name-indent, 34px));
+  border:0;
+  text-align:left;
+}
+
+.window-app.sandbox.sheet .irop-mods-tray{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:4px;
+  min-height:24px;
+  padding:1px 4px;
+  margin-left:-4px;
+  border-radius:3px;
+  outline:1px solid transparent;
+  transition:outline-color .12s, background-color .12s;
+}
+
+.window-app.sandbox.sheet .irop-mods-label{
+  font-family:var(--irop-mono, 'Share Tech Mono', ui-monospace, Consolas, monospace);
+  font-size:calc(10px * var(--irop-text-scale, 1));
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--irop-muted, #8a93a3);
+  margin-right:4px;
+  white-space:nowrap;
+}
+
+.window-app.sandbox.sheet .irop-mod,
+.window-app.sandbox.sheet .irop-mod-slot{
+  flex:none;
+  box-sizing:border-box;
+  width:22px;
+  height:22px;
+  border-radius:2px;
+}
+
+.window-app.sandbox.sheet .irop-mod{
+  position:relative;
+  border:1px solid var(--irop-line-bright, #33404f);
+  background:var(--irop-sunk, #0d1116);
+  cursor:grab;
+  overflow:hidden;
+}
+.window-app.sandbox.sheet .irop-mod:hover{
+  border-color:var(--irop-accent, #3fb8b0);
+  box-shadow:0 0 6px color-mix(in srgb, var(--irop-accent, #3fb8b0) 45%, transparent);
+}
+.window-app.sandbox.sheet .irop-mod img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border:0;
+  pointer-events:none;
+}
+.window-app.sandbox.sheet .irop-mod.irop-mod-over{ border-color:#d64f4f; }
+
+.window-app.sandbox.sheet .irop-mod-slot{
+  border:1px dashed var(--irop-line-bright, #33404f);
+  background:rgba(255,255,255,0.02);
+}
+
+.window-app.sandbox.sheet .irop-mods-locked .irop-mod{ cursor:default; }
+.window-app.sandbox.sheet .irop-mods-locked .irop-mod-slot{ opacity:.5; }
+
+/* Picking up a mod lights the trays it could go on. */
+.window-app.sandbox.sheet[data-irop-drag="ranged"] .irop-mods-tray[data-kind="ranged"] .irop-mod-slot,
+.window-app.sandbox.sheet[data-irop-drag="melee"] .irop-mods-tray[data-kind="melee"] .irop-mod-slot,
+.window-app.sandbox.sheet[data-irop-drag="armor"] .irop-mods-tray[data-kind="armor"] .irop-mod-slot{
+  border-color:var(--irop-accent, #3fb8b0);
+  background:color-mix(in srgb, var(--irop-accent, #3fb8b0) 10%, transparent);
+}
+
+.window-app.sandbox.sheet .irop-mods-tray.irop-drop-ok{
+  outline-color:var(--irop-accent, #3fb8b0);
+  background:color-mix(in srgb, var(--irop-accent, #3fb8b0) 12%, transparent);
+}
+.window-app.sandbox.sheet .irop-mods-tray.irop-drop-bad{
+  outline-color:#d64f4f;
+  background:rgba(214,79,79,0.10);
+}
+
+/* Fitted mods step out of their own table. Part of a stack stays, tagged. */
+.window-app.sandbox.sheet table.sbtable > tbody > tr.irop-mod-fitted{ display:none; }
+
+.window-app.sandbox.sheet .irop-mod-count{
+  margin-left:6px;
+  font-family:var(--irop-mono, 'Share Tech Mono', ui-monospace, Consolas, monospace);
+  font-size:calc(10px * var(--irop-text-scale, 1));
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--irop-muted, #8a93a3);
+}
+
+.window-app.sandbox.sheet td.irop-mod-source{ cursor:grab; }
