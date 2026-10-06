@@ -20,7 +20,11 @@ Then enable it in the world under Manage Modules.
 * Click a fitted mod to open it. Hover it to read it.
 * A GM can drag a mod straight from the Items sidebar onto a tray: it is added to the sheet and fitted in one go.
 
-A fitted mod leaves its table so it is not listed twice. Mods only fit their own kind, and only as many as there are slots.
+Fitted mods stay listed in the Mods section of the Gear box, tagged with what they are on, so that section always shows every mod carried, how many, and the Capacity they take. The Hide fitted mods setting takes them out of the list instead. Mods only fit their own kind, one of each per item, and only as many as there are slots.
+
+## Setup
+
+Run the GM macro `weapon-mods-setup.js` (kept with the Insurrection Foundry macros) on apply. It makes the Ranged, Melee and Armor Mods groups and tables, puts the tables in the Gear box on the Loadout tab, and once every character has been reloaded from the template, adds their Capacity to Current Weight.
 
 ## Slots
 

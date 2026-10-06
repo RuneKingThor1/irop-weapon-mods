@@ -22,8 +22,10 @@
    off and the sheet goes back to how it was, with every mod in inventory.
 
    A mod is anything in a group named like "Ranged Mods", "Melee Mods" or
-   "Armor Mods" (or carrying the group keys in KINDS below). A fitted mod is
-   hidden from its own table; part of a stack shows "1 fitted" instead.
+   "Armor Mods" (or carrying the group keys in KINDS below). A fitted mod
+   stays in its own table, in the Gear box's Mods section, tagged with what
+   it is fitted to, so that section always shows every mod carried and the
+   Capacity it takes. A world setting hides fitted mods instead.
    ========================================================================= */
 
 const MOD = "irop-weapon-mods";
@@ -74,6 +76,11 @@ Hooks.once("init", () => {
     name: "Slot overrides",
     hint: "Items whose slots the rules above get wrong, separated by semicolons. Give a class (Light, Medium, Heavy) or a number. Example: Kevlar Armor = Medium; Ballistic Shield = 0",
     scope: "world", config: true, type: String, default: "Kevlar Armor = Medium", onChange: redraw
+  });
+  game.settings.register(MOD, "hideFitted", {
+    name: "Hide fitted mods",
+    hint: "Take a mod out of its Mods table while it is fitted. Off, it stays listed and tagged with what it is fitted to.",
+    scope: "world", config: true, type: Boolean, default: false, onChange: redraw
   });
 });
 
@@ -128,7 +135,7 @@ function readState(actor) {
   const citems = Array.isArray(actor?.system?.citems) ? actor.system.citems : [];
   const byId = new Map(citems.map(e => [e.id, e]));
   const raw = actor?.getFlag?.(MOD, "links");
-  const links = [], perMod = new Map(), onHost = new Map();
+  const links = [], perMod = new Map(), onHost = new Map(), hostsOf = new Map();
   for (const l of Array.isArray(raw) ? raw : []) {
     const host = byId.get(l?.w), mod = byId.get(l?.m);
     if (!host || !mod || l.w === l.m) continue;
@@ -138,8 +145,10 @@ function readState(actor) {
     links.push({ w: l.w, m: l.m });
     if (!onHost.has(l.w)) onHost.set(l.w, []);
     onHost.get(l.w).push(mod);
+    if (!hostsOf.has(l.m)) hostsOf.set(l.m, []);
+    hostsOf.get(l.m).push(host);
   }
-  return { byId, links, perMod, onHost };
+  return { byId, links, perMod, onHost, hostsOf };
 }
 
 function libraryItem(entry) {
@@ -169,14 +178,15 @@ function planFit(actor, { mod, from, to, kind }) {
     const i = links.findIndex(l => l.w === from && l.m === mod);
     if (i >= 0) { links.splice(i, 1); moving = true; }
   }
-  const slots = slotsFor(kind, host);
-  if (links.filter(l => l.w === to).length >= slots) {
-    return { error: slots ? `${host.name} has no free mod slots (${slots}).` : `${host.name} takes no mods.` };
-  }
   if (!moving && links.filter(l => l.m === mod).length >= countOf(modEntry)) {
     return { error: countOf(modEntry) > 1
       ? `All ${countOf(modEntry)} of ${modEntry.name} are already fitted.`
       : `${modEntry.name} is already fitted. Drag it from that tray instead.` };
+  }
+  if (links.some(l => l.w === to && l.m === mod)) return { error: `${host.name} already has ${modEntry.name}.` };
+  const slots = slotsFor(kind, host);
+  if (links.filter(l => l.w === to).length >= slots) {
+    return { error: slots ? `${host.name} has no free mod slots (${slots}).` : `${host.name} takes no mods.` };
   }
   links.push({ w: to, m: mod });
   return { links };
@@ -281,20 +291,26 @@ function decorate(app) {
       }
     }
 
-    // the mods' own tables: fitted ones step out, the rest can be picked up
+    // the mods' own tables: tagged with where they are fitted (or, with the
+    // hide setting on, fitted ones step out), and armed for dragging
+    const hide = !!game.settings.get(MOD, "hideFitted");
     for (const row of root.querySelectorAll("tr.table-row[id]")) {
       const entry = s.byId.get(row.id);
       if (!entry || !modKind(entry.groups)) continue;
       const fitted = s.perMod.get(row.id) ?? 0, total = countOf(entry);
-      row.classList.toggle("irop-mod-fitted", fitted >= total);
+      row.classList.toggle("irop-mod-fitted", hide && fitted >= total);
+      row.classList.toggle("irop-mod-all-fitted", !hide && fitted >= total);
       let tag = row.querySelector(".irop-mod-count");
-      if (fitted > 0 && fitted < total) {
+      const text = !fitted ? ""
+        : hide ? (fitted < total ? `${fitted} fitted` : "")
+        : `on ${(s.hostsOf.get(row.id) ?? []).map(h => h.name).join(", ")}`;
+      if (text) {
         if (!tag) {
           tag = root.ownerDocument.createElement("span");
           tag.className = "irop-mod-count";
           (row.querySelector(".sb-two-col-card-name") ?? row.querySelector("td.tablenamecell"))?.append(tag);
         }
-        tag.textContent = `${fitted} fitted`;
+        tag.textContent = text;
       } else tag?.remove();
       const cell = row.querySelector("td.tablenamecell");
       if (cell && editable && !cell.classList.contains("irop-mod-source")) {

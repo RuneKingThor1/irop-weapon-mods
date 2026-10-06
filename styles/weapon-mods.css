@@ -101,11 +101,16 @@
   background:rgba(214,79,79,0.10);
 }
 
-/* Fitted mods step out of their own table. Part of a stack stays, tagged. */
+/* A fitted mod stays in the Mods section, tagged with what it is on, and
+   dims a little once every one of it is fitted. With the Hide fitted mods
+   setting on, it steps out of the table instead. */
 .window-app.sandbox.sheet table.sbtable > tbody > tr.irop-mod-fitted{ display:none; }
+.window-app.sandbox.sheet table.sbtable > tbody > tr.irop-mod-all-fitted > td{ opacity:.7; }
+.window-app.sandbox.sheet table.sbtable > tbody > tr.irop-mod-all-fitted > td.tablenamecell{ cursor:default; }
 
 .window-app.sandbox.sheet .irop-mod-count{
-  margin-left:6px;
+  display:block;
+  line-height:1.2;
   font-family:var(--irop-mono, 'Share Tech Mono', ui-monospace, Consolas, monospace);
   font-size:calc(10px * var(--irop-text-scale, 1));
   letter-spacing:0.08em;
