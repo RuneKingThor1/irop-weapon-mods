@@ -1,8 +1,8 @@
 {
   "id": "irop-weapon-mods",
   "title": "Insurrection: Weapon Mods",
-  "description": "Drag and drop mod trays under each weapon and armor on Insurrection's Sandbox character sheets. A record of what is fitted, with no mechanical automation.",
-  "version": "1.1.0",
+  "description": "Drag and drop mod trays under each weapon and armor on Insurrection's Sandbox character sheets. A record of what is fitted, with no mechanical automation; mods count toward Current Capacity.",
+  "version": "1.2.0",
   "authors": [{ "name": "RuneKingThor1" }],
   "compatibility": { "minimum": "13", "verified": "13.351" },
   "relationships": {

@@ -24,7 +24,11 @@ Fitted mods stay listed in the Mods section of the Gear box, tagged with what th
 
 ## Setup
 
-Run the GM macro `weapon-mods-setup.js` (kept with the Insurrection Foundry macros) on apply. It makes the Ranged, Melee and Armor Mods groups and tables, puts the tables in the Gear box on the Loadout tab, and once every character has been reloaded from the template, adds their Capacity to Current Weight.
+Run the GM macro `weapon-mods-setup.js` (kept with the Insurrection Foundry macros) on apply. It makes the Ranged, Melee and Armor Mods groups and tables and puts the tables in the Gear box on the Loadout tab. Then run Build Actor Templates and Reload Actors From Template from Sandbox's menu.
+
+## Weight
+
+Each mod counts toward Current Capacity through its own Sandbox modifier, the way Heavy Armor adds its DR: one ADD modifier named Mod weight, adding `#{twght}` (its weight times #) to `curwght`, with the item set passive so it applies while carried. The shared Current Capacity formula is never edited, so NPC sheets without the Mods tables are untouched. The GM's client gives every mod item this modifier when the world loads, and any new mod the moment it is created or put in a mod group. A character already carrying a mod picks it up the next time a GM updates them; Reload Actors From Template does everyone. Both settings live under Module Settings.
 
 ## Slots
 
@@ -32,7 +36,7 @@ Set under Configure Settings, Module Settings. Defaults: ranged weapons 3, melee
 
 ## What it stores
 
-One flag on each actor listing which mod entry is fitted to which item. Mods stay ordinary carried items, so weight and quantity are untouched, and no Sandbox data is written. Disabling the module returns the sheet to normal with every mod in inventory.
+One flag on each actor listing which mod entry is fitted to which item. Mods stay ordinary carried items, so quantity is untouched. The only Sandbox data written is the Mod weight modifier on mod items. Disabling the module returns the sheet to normal with every mod in inventory.
 
 ## Updating
 

@@ -18,14 +18,26 @@
    What is fitted where lives in one actor flag, an array of
    { w: host entry id, m: mod entry id } pairs. Mods stay ordinary carried
    items in actor.system.citems, so their weight, description and quantity
-   are untouched, and Sandbox's own data is never written. Turn the module
-   off and the sheet goes back to how it was, with every mod in inventory.
+   are untouched. The only Sandbox data the module writes is the weight
+   modifier on mod items (see WEIGHT below). Turn the module off and the
+   sheet goes back to how it was, with every mod in inventory.
 
    A mod is anything in a group named like "Ranged Mods", "Melee Mods" or
    "Armor Mods" (or carrying the group keys in KINDS below). A fitted mod
    stays in its own table, in the Gear box's Mods section, tagged with what
    it is fitted to, so that section always shows every mod carried and the
    Capacity it takes. A world setting hides fitted mods instead.
+
+   WEIGHT
+   Mods count toward Current Capacity through Sandbox's own item modifiers,
+   the way Heavy Armor adds its DR: each mod cItem carries one ADD modifier,
+   "Mod weight", adding #{twght} (its weight times #) to curwght, and is set
+   passive (PAS) so it always applies while carried. That leaves the shared
+   Current Capacity formula alone, so NPC sheets without the Mods tables are
+   never touched. The GM's client gives every mod item that modifier: all of
+   them when the world loads, and any new one the moment it is created or
+   put in a mod group. A character already carrying a mod picks it up the
+   next time a GM updates them (Reload Actors From Template does everyone).
    ========================================================================= */
 
 const MOD = "irop-weapon-mods";
@@ -82,6 +94,56 @@ Hooks.once("init", () => {
     hint: "Take a mod out of its Mods table while it is fitted. Off, it stays listed and tagged with what it is fitted to.",
     scope: "world", config: true, type: Boolean, default: false, onChange: redraw
   });
+  game.settings.register(MOD, "countWeight", {
+    name: "Mods count toward Current Capacity",
+    hint: "Gives every mod item a Mod weight modifier adding its Capacity to the property below. Turning this off stops adding it to new mods; it does not remove it from existing ones.",
+    scope: "world", config: true, type: Boolean, default: true
+  });
+  game.settings.register(MOD, "weightProperty", {
+    name: "Current Capacity property key",
+    hint: "The property mods add their weight to.",
+    scope: "world", config: true, type: String, default: "curwght"
+  });
+});
+
+/* ---- mod weight ------------------------------------------------------------ */
+const WEIGHT_MOD = "Mod weight";
+const WEIGHT_EXPR = "#{twght}";
+const hasWeightMod = item => {
+  const key = game.settings.get(MOD, "weightProperty");
+  return (item?.system?.mods ?? []).some(m => m?.type === "ADD" && m?.attribute === key && String(m?.value ?? "").replace(/\s/g, "") === WEIGHT_EXPR);
+};
+const isLeadGM = () => game.user?.isGM && (!game.users?.activeGM || game.users.activeGM.isSelf);
+
+/* Give one mod cItem its weight modifier and make it passive. Only the lead
+   GM writes, so two GMs online never both add it. True if it changed. */
+async function giveWeight(item) {
+  if (!isLeadGM() || !game.settings.get(MOD, "countWeight")) return false;
+  if (item?.type !== "cItem" || item.pack || !modKind(item.system?.groups) || hasWeightMod(item)) return false;
+  const mods = foundry.utils.deepClone(item.system.mods ?? []);
+  const index = mods.length ? Math.max(...mods.map(m => Number(m?.index) || 0)) + 1 : 0;
+  mods.push({ name: WEIGHT_MOD, index, type: "ADD", attribute: game.settings.get(MOD, "weightProperty"), value: WEIGHT_EXPR,
+    selectnum: "", listmod: "INCLUDE", items: [], citem: item.id });
+  const update = { "system.mods": mods };
+  if (item.system.usetype !== "PAS") update["system.usetype"] = "PAS";
+  await item.update(update);
+  return true;
+}
+
+Hooks.once("ready", async () => {
+  if (!isLeadGM() || !game.settings.get(MOD, "countWeight")) return;
+  let n = 0;
+  for (const item of game.items) {
+    try { if (await giveWeight(item)) n++; } catch (err) { log(`could not give ${item.name} its weight`, err); }
+  }
+  if (n) {
+    log(`gave ${n} mod item(s) their weight modifier`);
+    ui.notifications.info(`Weapon Mods: ${n} mod item(s) now count toward Current Capacity. Characters already carrying them update after Reload Actors From Template.`);
+  }
+});
+Hooks.on("createItem", item => { giveWeight(item).catch(err => log("weight", err)); });
+Hooks.on("updateItem", (item, changes) => {
+  if (foundry.utils.hasProperty(changes, "system.groups") || foundry.utils.hasProperty(changes, "system.mods")) giveWeight(item).catch(err => log("weight", err));
 });
 
 /* ---- reading the sheet's data -------------------------------------------- */
